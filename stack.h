@@ -28,4 +28,6 @@ stackErrorEnum stackCtor(stack *stk, size_t capacity);
 
 stackErrorEnum stackDtor(stack *stk);
 
+stackErrorEnum stackPush(stack *stk, elem_t value);
+
 #endif //STACK_H

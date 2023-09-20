@@ -38,3 +38,14 @@ stackErrorEnum stackDtor(stack *stk)
 
     return STACK_OK;
 }
+
+stackErrorEnum stackPush(stack *stk, elem_t value)
+{
+    stackErrorEnum error = stackError(stk);
+    if (error) return error;
+
+    if (stk->size == stk->capacity) return SMALL_CAPACITY;
+
+    stk->data[stk->size++] = value;
+    return STACK_OK;
+}
