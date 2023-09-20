@@ -5,8 +5,9 @@ typedef int elem_t;
 #define elemFormat "%d"
 
 const size_t DEFAULT_CAPACITY = 8;
-const size_t LAST_PRINTED = 8;
-const size_t ELEM_PRINT_ADD = 4;
+const size_t LAST_PRINTED     = 16;
+const size_t ELEM_PRINT_ADD   = 4;
+const size_t REALLOC_RATE     = 2;
 
 struct stack
 {
@@ -22,7 +23,8 @@ enum stackErrorEnum
     STACK_NULL     = 1,
     DATA_NULL      = 2,
     SMALL_CAPACITY = 3,
-    ANTI_OVERFLOW  = 4
+    ANTI_OVERFLOW  = 4,
+    REALLOC_FAILED = 5
 };
 
 stackErrorEnum stackError(stack *stk);
@@ -36,5 +38,7 @@ stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *fun
 stackErrorEnum stackPush(stack *stk, elem_t value);
 
 stackErrorEnum stackPop(stack *stk, elem_t *returnValue);
+
+stackErrorEnum stackRealloc(stack *stk);
 
 #endif //STACK_H

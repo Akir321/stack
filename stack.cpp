@@ -52,15 +52,18 @@ stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *fun
         return DATA_NULL;
     }
     putchar('\n');
+
     for (size_t i = 0; 
-        (i < stk->size + ELEM_PRINT_ADD && i < stk->size) 
-         || i < LAST_PRINTED; i++)
+         i < stk->size + ELEM_PRINT_ADD 
+         && i < stk->capacity
+         && i < LAST_PRINTED; i++)
     {
         printf("   ");
         if (i < stk->size) putchar('*');
         else               putchar(' ');
         printf("[%lld] = " elemFormat "\n", i, stk->data[i]);
     }
+
     return stackError(stk);
 }
 
@@ -69,7 +72,7 @@ stackErrorEnum stackPush(stack *stk, elem_t value)
     stackErrorEnum error = stackError(stk);
     if (error) return error;
 
-    if (stk->size == stk->capacity) return SMALL_CAPACITY;
+    if (stk->size >= stk->capacity) stackRealloc(stk);
 
     stk->data[stk->size++] = value;
     return STACK_OK;
@@ -82,9 +85,36 @@ stackErrorEnum stackPop(stack *stk, elem_t *returnValue)
     assert(returnValue);
 
     if (!stk->size) return ANTI_OVERFLOW;
+    if (stk->size * REALLOC_RATE  * REALLOC_RATE <= stk->capacity) stackRealloc(stk);
 
     *returnValue = stk->data[--stk->size];
     //stk->data[stk->size] = 0;
 
+    return STACK_OK;
+}
+
+stackErrorEnum stackRealloc(stack *stk)
+{
+    stackErrorEnum error = stackError(stk);
+    if (error) return error;
+
+    printf("i'm stackRealloc\n");
+    printf("capacity = %lld\nsize = %lld\n", stk->capacity, stk->size);
+    printf("start reallocing\n");
+
+    if (stk->size >= stk->capacity)
+    {
+        stk->capacity *= REALLOC_RATE;
+        stk->data = (elem_t *)realloc(stk->data, stk->capacity * sizeof(elem_t));
+        if (!stk->data) return REALLOC_FAILED;
+    }
+    else if (stk->size * REALLOC_RATE  * REALLOC_RATE <= stk->capacity)
+    {
+        stk->capacity /= REALLOC_RATE;
+        stk->data = (elem_t *)realloc(stk->data, stk->capacity * sizeof(elem_t));
+        if (!stk->data) return REALLOC_FAILED;
+    }
+    printf("realloc finished\n");
+    printf("new capacity = %lld\nnew size = %lld\n", stk->capacity, stk->size);
     return STACK_OK;
 }
