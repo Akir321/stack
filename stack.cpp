@@ -74,3 +74,17 @@ stackErrorEnum stackPush(stack *stk, elem_t value)
     stk->data[stk->size++] = value;
     return STACK_OK;
 }
+
+stackErrorEnum stackPop(stack *stk, elem_t *returnValue)
+{
+    stackErrorEnum error = stackError(stk);
+    if (error) return error;
+    assert(returnValue);
+
+    if (!stk->size) return ANTI_OVERFLOW;
+
+    *returnValue = stk->data[--stk->size];
+    //stk->data[stk->size] = 0;
+
+    return STACK_OK;
+}

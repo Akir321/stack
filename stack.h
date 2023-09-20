@@ -21,7 +21,8 @@ enum stackErrorEnum
     STACK_OK       = 0,
     STACK_NULL     = 1,
     DATA_NULL      = 2,
-    SMALL_CAPACITY = 4
+    SMALL_CAPACITY = 3,
+    ANTI_OVERFLOW  = 4
 };
 
 stackErrorEnum stackError(stack *stk);
@@ -33,5 +34,7 @@ stackErrorEnum stackDtor(stack *stk);
 stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *function);
 
 stackErrorEnum stackPush(stack *stk, elem_t value);
+
+stackErrorEnum stackPop(stack *stk, elem_t *returnValue);
 
 #endif //STACK_H
