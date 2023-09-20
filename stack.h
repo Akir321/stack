@@ -5,6 +5,8 @@ typedef int elem_t;
 #define elemFormat "%d"
 
 const size_t DEFAULT_CAPACITY = 8;
+const size_t LAST_PRINTED = 8;
+const size_t ELEM_PRINT_ADD = 4;
 
 struct stack
 {
@@ -27,6 +29,8 @@ stackErrorEnum stackError(stack *stk);
 stackErrorEnum stackCtor(stack *stk, size_t capacity);
 
 stackErrorEnum stackDtor(stack *stk);
+
+stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *function);
 
 stackErrorEnum stackPush(stack *stk, elem_t value);
 
