@@ -6,7 +6,7 @@
 #define STACK_VERIFY stackErrorEnum error = stackError(stk); \
 if (error) \
 { \
-    stackDump(stk, __FILE__, __LINE__, __PRETTY_FUNCTION__); \
+    STACK_DUMP(stk); \
     return error; \
 }
 

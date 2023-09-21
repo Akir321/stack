@@ -10,24 +10,24 @@ int main()
 
     stackPush(&stk, 4);
     stackPush(&stk, 6);
-    stackDump(&stk, "test_stack.cpp", 13, "main()");
+    STACK_DUMP(&stk);
     stackPush(&stk, 3);
     stackPush(&stk, 4);
     stackPush(&stk, 6);
     stackPush(&stk, 3);
-    stackDump(&stk, "test_stack.cpp", 18, "main()");
+    STACK_DUMP(&stk);
     //printf("%d %d %d\n", stk.data[0], stk.data[1], stk.data[2]);
 
     elem_t a = 0;
     stackPop(&stk, &a);
     printf("popped = %d\n", a);
-    stackDump(&stk, "test_stack.cpp", 24, "main()");
+    STACK_DUMP(&stk);
     stackPop(&stk, &a);
     stackPop(&stk, &a);
     stackPop(&stk, &a);
-    stackDump(&stk, "test_stack.cpp", 28, "main()");
+    STACK_DUMP(&stk);
     stackPop(&stk, &a);
-    stackDump(&stk, "test_stack.cpp", 30, "main()");
+    STACK_DUMP(&stk);
 
     stackDtor(&stk);
     printf("error (after destructing) = %d\n", stackError(&stk));

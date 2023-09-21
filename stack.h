@@ -35,6 +35,8 @@ stackErrorEnum stackDtor(stack *stk);
 
 stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *function);
 
+#define STACK_DUMP(stk) stackDump((stk), __FILE__, __LINE__, __func__);
+
 stackErrorEnum stackPush(stack *stk, elem_t value);
 
 stackErrorEnum stackPop(stack *stk, elem_t *returnValue);
