@@ -31,4 +31,5 @@ int main()
 
     stackDtor(&stk);
     printf("error (after destructing) = %d\n", stackError(&stk));
+    stackPush(&stk, 2);
 }

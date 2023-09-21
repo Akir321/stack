@@ -3,6 +3,13 @@
 
 #include "stack.h"
 
+#define STACK_VERIFY stackErrorEnum error = stackError(stk); \
+if (error) \
+{ \
+    stackDump(stk, __FILE__, __LINE__, __PRETTY_FUNCTION__); \
+    return error; \
+}
+
 stackErrorEnum stackError(stack *stk)
 {
     if (!stk)                      return STACK_NULL;
@@ -69,8 +76,7 @@ stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *fun
 
 stackErrorEnum stackPush(stack *stk, elem_t value)
 {
-    stackErrorEnum error = stackError(stk);
-    if (error) return error;
+    STACK_VERIFY;
 
     if (stk->size >= stk->capacity) stackRealloc(stk);
 
@@ -80,8 +86,7 @@ stackErrorEnum stackPush(stack *stk, elem_t value)
 
 stackErrorEnum stackPop(stack *stk, elem_t *returnValue)
 {
-    stackErrorEnum error = stackError(stk);
-    if (error) return error;
+    STACK_VERIFY;
     assert(returnValue);
 
     if (!stk->size) return ANTI_OVERFLOW;
@@ -95,8 +100,7 @@ stackErrorEnum stackPop(stack *stk, elem_t *returnValue)
 
 stackErrorEnum stackRealloc(stack *stk)
 {
-    stackErrorEnum error = stackError(stk);
-    if (error) return error;
+    STACK_VERIFY;
 
     printf("i'm stackRealloc\n");
     printf("capacity = %lld\nsize = %lld\n", stk->capacity, stk->size);
