@@ -9,7 +9,8 @@ const size_t LAST_PRINTED     = 16;
 const size_t ELEM_PRINT_ADD   = 4;
 const size_t REALLOC_RATE     = 2;
 
-const unsigned int CANARY = 0xDEADBEEF;
+const unsigned int STK_CANARY = 0xDEADBEEF;
+const unsigned int BUF_CANARY = 0xFACEFEED;
 
 struct stack
 {
@@ -48,5 +49,7 @@ stackErrorEnum stackPush(stack *stk, elem_t value);
 stackErrorEnum stackPop(stack *stk, elem_t *returnValue);
 
 stackErrorEnum stackRealloc(stack *stk);
+
+void *myCalloc(size_t elementNum, size_t elementSize);
 
 #endif //STACK_H

@@ -12,8 +12,11 @@ int main()
     stackPush(&stk, 6);
     STACK_DUMP(&stk);
     stackPush(&stk, 3);
+    STACK_DUMP(&stk);
     stackPush(&stk, 4);
+    STACK_DUMP(&stk);
     stackPush(&stk, 6);
+    STACK_DUMP(&stk);
     stackPush(&stk, 3);
     STACK_DUMP(&stk);
     //printf("%d %d %d\n", stk.data[0], stk.data[1], stk.data[2]);
