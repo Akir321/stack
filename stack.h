@@ -9,12 +9,17 @@ const size_t LAST_PRINTED     = 16;
 const size_t ELEM_PRINT_ADD   = 4;
 const size_t REALLOC_RATE     = 2;
 
+const unsigned int CANARY = 0xDEADBEEF;
+
 struct stack
 {
+    unsigned int stackCanary1;
     elem_t *data;
 
     size_t capacity;
     size_t size;
+
+    unsigned int stackCanary2;
 };
 
 enum stackErrorEnum
@@ -24,7 +29,8 @@ enum stackErrorEnum
     DATA_NULL      = 2,
     SMALL_CAPACITY = 3,
     ANTI_OVERFLOW  = 4,
-    REALLOC_FAILED = 5
+    REALLOC_FAILED = 5,
+    CHANGED_CANARY = 6
 };
 
 stackErrorEnum stackError(stack *stk);

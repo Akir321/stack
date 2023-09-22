@@ -29,6 +29,13 @@ int main()
     stackPop(&stk, &a);
     STACK_DUMP(&stk);
 
+    for (char *ptr = (char *)&stk; *ptr !=  '\0'; ptr++)
+    {
+        printf("%c\n", *ptr);
+        *ptr = 42;
+    }
+    stackPush(&stk, 78);
+
     stackDtor(&stk);
     printf("error (after destructing) = %d\n", stackError(&stk));
     stackPush(&stk, 2);

@@ -6,15 +6,18 @@
 #define STACK_VERIFY stackErrorEnum error = stackError(stk); \
 if (error) \
 { \
+    printf("STACK CORRUPTED\n"); \
     STACK_DUMP(stk); \
     return error; \
 }
 
 stackErrorEnum stackError(stack *stk)
 {
-    if (!stk)                      return STACK_NULL;
-    if (!stk->data)                return DATA_NULL;
-    if (stk->capacity < stk->size) return SMALL_CAPACITY;
+    if (!stk)                        return STACK_NULL;
+    if (!stk->data)                  return DATA_NULL;
+    if (stk->capacity < stk->size)   return SMALL_CAPACITY;
+    if (stk->stackCanary1 != CANARY) return CHANGED_CANARY;
+    if (stk->stackCanary2 != CANARY) return CHANGED_CANARY;
 
     return STACK_OK;
 }
@@ -25,6 +28,9 @@ stackErrorEnum stackCtor(stack *stk, size_t capacity)
 
     stk->capacity = (capacity > 0) ? capacity : DEFAULT_CAPACITY;
     stk->size = 0;
+
+    stk->stackCanary1 = CANARY;
+    stk->stackCanary2 = CANARY;
 
     stk->data = (elem_t *)calloc(stk->capacity, sizeof(elem_t));
     printf("data[%p], capacity = %lld\n", stk->data, stk->capacity);
@@ -43,6 +49,9 @@ stackErrorEnum stackDtor(stack *stk)
     stk->capacity = 0;
     stk->size = -1;
 
+    stk->stackCanary1 = 0;
+    stk->stackCanary2 = 0;
+
     return STACK_OK;
 }
 
@@ -51,6 +60,9 @@ stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *fun
     assert(stk);
     printf("I'm stackDump called from %s (%d) %s\n", function, line, file);
     printf(" capacity = %lld\n size = %lld\n", stk->capacity, stk->size);
+
+    printf("stackCanary1 = 0x%x\n", stk->stackCanary1);
+    printf("stackCanary2 = 0x%x\n", stk->stackCanary2);
 
     printf(" data[%p] = ", stk->data);
     if (!stk->data)
