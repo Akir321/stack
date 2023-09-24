@@ -130,7 +130,8 @@ stackErrorField stackPush(stack *stk, elem_t value)
     STACK_VERIFY;
     stackErrorField error = {};
 
-    if (stk->size >= stk->capacity) stackRealloc(stk);
+    if (stk->size >= stk->capacity) error = stackRealloc(stk);
+    if (error.realloc_failed) return error;
 
     stk->data[stk->size++] = value;
 
@@ -150,7 +151,8 @@ stackErrorField stackPop(stack *stk, elem_t *returnValue)
         error.anti_overflow = 1;
         return error;
     }
-    if (stk->size * REALLOC_RATE  * REALLOC_RATE <= stk->capacity) stackRealloc(stk);
+    if (stk->size * REALLOC_RATE * REALLOC_RATE <= stk->capacity) error =  stackRealloc(stk);
+    if (error.realloc_failed) return error;
 
     *returnValue = stk->data[--stk->size];
     //stk->data[stk->size] = 0;
