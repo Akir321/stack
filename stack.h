@@ -46,6 +46,8 @@ stackErrorField stackDtor(stack *stk);
 
 stackErrorField stackDump(stack *stk, const char *file, int line, const char *function);
 
+void printStackErrors(stackErrorField error);
+
 #define STACK_DUMP(stk) stackDump((stk), __FILE__, __LINE__, __func__);
 
 stackErrorField stackPush(stack *stk, elem_t value);

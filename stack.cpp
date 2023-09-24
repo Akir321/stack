@@ -18,17 +18,17 @@ stackErrorField stackError(stack *stk)
     if (!stk)                                { error.stack_null     = 1;  return error; }
     if (!stk->data)                            error.data_null      = 1;
     if (stk->capacity < stk->size)             error.small_capacity = 1;
-    if (error.data_null == 1)                  return error;
 
     if (stk->stackCanary1 != STK_CANARY)       error.changed_canary = 1;
     if (stk->stackCanary2 != STK_CANARY)       error.changed_canary = 1;
+    if (stackHashCheck(stk).changed_hash == 1) error.changed_hash   = 1;
+
+    if (error.data_null == 1)                  return error;
 
     unsigned int buf_canary = *((unsigned int *)stk->data - 1);
     if (buf_canary != BUF_CANARY)              error.changed_canary = 1;
     buf_canary = *(unsigned int *)(stk->data + stk->capacity);
     if (buf_canary != BUF_CANARY)              error.changed_canary = 1;
-
-    if (stackHashCheck(stk).changed_hash == 1) error.changed_hash   = 1;
 
     return error;
 }
@@ -92,6 +92,9 @@ stackErrorField stackDump(stack *stk, const char *file, int line, const char *fu
 {
     assert(stk);
     printf("I'm stackDump called from %s (%d) %s\n", function, line, file);
+    stackErrorField error = stackError(stk);
+    printStackErrors(error);
+
     printf(" capacity = %lld\n size = %lld\n", stk->capacity, stk->size);
     printf(" hash = %u\n", stk->hash);
 
@@ -102,7 +105,7 @@ stackErrorField stackDump(stack *stk, const char *file, int line, const char *fu
     if (!stk->data)
     {
         printf("NULL\n");
-        return stackError(stk);
+        return error;
     }
     putchar('\n');
 
@@ -122,7 +125,18 @@ stackErrorField stackDump(stack *stk, const char *file, int line, const char *fu
     buf_canary = *(unsigned int *)(stk->data + stk->capacity);
     printf("bufferCanary2 = 0x%x\n", buf_canary);
 
-    return stackError(stk);
+    return error;
+}
+
+void printStackErrors(stackErrorField error)
+{
+    if (error.stack_null)       printf("stack_null     = 1\n");
+    if (error.data_null)        printf("data_null      = 1\n");
+    if (error.small_capacity)   printf("small_capacity = 1\n");
+    if (error.changed_canary)   printf("changed_canary = 1\n");
+    if (error.changed_hash)     printf("changed_hash   = 1\n");
+    if (error.anti_overflow)    printf("anti_overflow  = 1\n");
+    if (error.realloc_failed)   printf("realloc_failed = 1\n");
 }
 
 stackErrorField stackPush(stack *stk, elem_t value)
