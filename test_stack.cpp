@@ -5,8 +5,22 @@
 int main()
 {
     stack stk = {};
+    printf("sizeof(stack) = %lld\n", sizeof(stack));
+    for (size_t i = 0; i < sizeof(stack); i++)
+    {
+        printf("%d", *((char *)&stk + i));
+    }
+    putchar('\n');
+    STACK_DUMP(&stk);
     stackCtor(&stk, 2);
-    printf("error = %d\n", stackError(&stk));
+    printf("hash calc  = %u\n", stackHashCalc(&stk));
+    printf("hash check = %d\n", stackHashCheck(&stk));
+    stackError(&stk);
+    for (size_t i = 0; i < sizeof(stack); i++)
+    {
+        printf("%d ", *((char *)&stk + i));
+    }
+    STACK_DUMP(&stk);
 
     stackPush(&stk, 4);
     stackPush(&stk, 6);

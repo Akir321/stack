@@ -3,25 +3,26 @@
 
 #include "stack.h"
 
-#define STACK_VERIFY stackErrorEnum error = stackError(stk); \
-if (error) \
+#define STACK_VERIFY \
+if (stackError(stk)) \
 { \
     printf("STACK CORRUPTED\n"); \
     STACK_DUMP(stk); \
-    return error; \
+    return stackError(stk); \
 }
 
 stackErrorEnum stackError(stack *stk)
 {
-    if (!stk)                            return STACK_NULL;
-    if (!stk->data)                      return DATA_NULL;
-    if (stk->capacity < stk->size)       return SMALL_CAPACITY;
-    if (stk->stackCanary1 != STK_CANARY) return CHANGED_CANARY;
-    if (stk->stackCanary2 != STK_CANARY) return CHANGED_CANARY;
+    if (!stk)                                return STACK_NULL;
+    if (!stk->data)                          return DATA_NULL;
+    if (stk->capacity < stk->size)           return SMALL_CAPACITY;
+    if (stk->stackCanary1 != STK_CANARY)     return CHANGED_CANARY;
+    if (stk->stackCanary2 != STK_CANARY)     return CHANGED_CANARY;
     unsigned int buf_canary = *((unsigned int *)stk->data - 1);
-    if (buf_canary != BUF_CANARY)        return CHANGED_CANARY;
+    if (buf_canary != BUF_CANARY)            return CHANGED_CANARY;
     buf_canary = *(unsigned int *)(stk->data + stk->capacity);
-    if (buf_canary != BUF_CANARY)        return CHANGED_CANARY;
+    if (buf_canary != BUF_CANARY)            return CHANGED_CANARY;
+    if (stackHashCheck(stk) == CHANGED_HASH) return CHANGED_HASH;
 
     return STACK_OK;
 }
@@ -44,6 +45,10 @@ stackErrorEnum stackCtor(stack *stk, size_t capacity)
     stk->data = (elem_t *)((int *)stk->data + 1);
     *(unsigned int *)(stk->data + stk->capacity) = BUF_CANARY;
 
+    stk->hash = stackHashCalc(stk);
+    printf("stackHashCalc = %u\n", stackHashCalc(stk));
+    printf("stkHash = %u\n", stk->hash);
+
     return STACK_OK;
 }
 
@@ -61,6 +66,8 @@ stackErrorEnum stackDtor(stack *stk)
     stk->stackCanary1 = 0;
     stk->stackCanary2 = 0;
 
+    stk->hash = 0;
+
     return STACK_OK;
 }
 
@@ -69,6 +76,7 @@ stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *fun
     assert(stk);
     printf("I'm stackDump called from %s (%d) %s\n", function, line, file);
     printf(" capacity = %lld\n size = %lld\n", stk->capacity, stk->size);
+    printf(" hash = %u\n", stk->hash);
 
     printf("stackCanary1  = 0x%x\n", stk->stackCanary1);
     printf("stackCanary2  = 0x%x\n", stk->stackCanary2);
@@ -102,11 +110,17 @@ stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *fun
 
 stackErrorEnum stackPush(stack *stk, elem_t value)
 {
+    STACK_DUMP(stk);
     STACK_VERIFY;
 
+    STACK_DUMP(stk);
     if (stk->size >= stk->capacity) stackRealloc(stk);
+    STACK_DUMP(stk);
 
     stk->data[stk->size++] = value;
+
+    stk->hash = stackHashCalc(stk);
+    STACK_VERIFY;
     return STACK_OK;
 }
 
@@ -121,6 +135,7 @@ stackErrorEnum stackPop(stack *stk, elem_t *returnValue)
     *returnValue = stk->data[--stk->size];
     //stk->data[stk->size] = 0;
 
+    stk->hash = stackHashCalc(stk);
     return STACK_OK;
 }
 
@@ -170,4 +185,35 @@ void *myCalloc(size_t elementNum, size_t elementSize)
     }
     
     return buffer;
+}
+
+unsigned int stackHashCalc(stack *stk)
+{
+    unsigned int tempHash = stk->hash;
+    stk->hash = 0;
+
+    unsigned int hash = 0;
+    for (size_t i = 0; i < sizeof(stack); i++)
+    {
+        hash = (hash * HASH_BASE + *((unsigned char *)stk + i)) % HASH_MOD;
+    }
+
+    if (!stk->data) return hash;
+
+    size_t bufSize = stk->capacity * sizeof(elem_t);
+    for (size_t i = 0; i < bufSize; i++)
+    {
+        hash = (hash * HASH_BASE + *((unsigned char *)stk->data + i)) % HASH_MOD;
+    }
+
+    stk->hash = tempHash;
+    return hash;
+}
+
+stackErrorEnum stackHashCheck(stack *stk)
+{
+    unsigned int hashValue = stackHashCalc(stk);
+    if (hashValue != stk->hash) return CHANGED_HASH;
+
+    return STACK_OK;
 }

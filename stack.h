@@ -9,6 +9,9 @@ const size_t LAST_PRINTED     = 16;
 const size_t ELEM_PRINT_ADD   = 4;
 const size_t REALLOC_RATE     = 2;
 
+const unsigned int HASH_BASE  = 256;
+const unsigned int HASH_MOD   = 11113;
+
 const unsigned int STK_CANARY = 0xDEADBEEF;
 const unsigned int BUF_CANARY = 0xFACEFEED;
 
@@ -20,6 +23,7 @@ struct stack
     size_t capacity;
     size_t size;
 
+    unsigned int hash;
     unsigned int stackCanary2;
 };
 
@@ -31,7 +35,8 @@ enum stackErrorEnum
     SMALL_CAPACITY = 3,
     ANTI_OVERFLOW  = 4,
     REALLOC_FAILED = 5,
-    CHANGED_CANARY = 6
+    CHANGED_CANARY = 6,
+    CHANGED_HASH   = 7
 };
 
 stackErrorEnum stackError(stack *stk);
@@ -51,5 +56,9 @@ stackErrorEnum stackPop(stack *stk, elem_t *returnValue);
 stackErrorEnum stackRealloc(stack *stk);
 
 void *myCalloc(size_t elementNum, size_t elementSize);
+
+unsigned int stackHashCalc(stack *stk);
+
+stackErrorEnum stackHashCheck(stack *stk);
 
 #endif //STACK_H
