@@ -4,32 +4,44 @@
 #include "stack.h"
 
 #define STACK_VERIFY \
-if (stackError(stk)) \
+if (errorFieldToU(stackError(stk))) \
 { \
     printf("STACK CORRUPTED\n"); \
     STACK_DUMP(stk); \
     return stackError(stk); \
 }
 
-stackErrorEnum stackError(stack *stk)
+stackErrorField stackError(stack *stk)
 {
-    if (!stk)                                return STACK_NULL;
-    if (!stk->data)                          return DATA_NULL;
-    if (stk->capacity < stk->size)           return SMALL_CAPACITY;
-    if (stk->stackCanary1 != STK_CANARY)     return CHANGED_CANARY;
-    if (stk->stackCanary2 != STK_CANARY)     return CHANGED_CANARY;
-    unsigned int buf_canary = *((unsigned int *)stk->data - 1);
-    if (buf_canary != BUF_CANARY)            return CHANGED_CANARY;
-    buf_canary = *(unsigned int *)(stk->data + stk->capacity);
-    if (buf_canary != BUF_CANARY)            return CHANGED_CANARY;
-    if (stackHashCheck(stk) == CHANGED_HASH) return CHANGED_HASH;
+    stackErrorField error = {};
 
-    return STACK_OK;
+    if (!stk)                                { error.stack_null     = 1;  return error; }
+    if (!stk->data)                            error.data_null      = 1;
+    if (stk->capacity < stk->size)             error.small_capacity = 1;
+    if (error.data_null == 1)                  return error;
+
+    if (stk->stackCanary1 != STK_CANARY)       error.changed_canary = 1;
+    if (stk->stackCanary2 != STK_CANARY)       error.changed_canary = 1;
+
+    unsigned int buf_canary = *((unsigned int *)stk->data - 1);
+    if (buf_canary != BUF_CANARY)              error.changed_canary = 1;
+    buf_canary = *(unsigned int *)(stk->data + stk->capacity);
+    if (buf_canary != BUF_CANARY)              error.changed_canary = 1;
+
+    if (stackHashCheck(stk).changed_hash == 1) error.changed_hash   = 1;
+
+    return error;
 }
 
-stackErrorEnum stackCtor(stack *stk, size_t capacity)
+unsigned errorFieldToU(stackErrorField error)
+{
+    return *(unsigned *)&error;
+}
+
+stackErrorField stackCtor(stack *stk, size_t capacity)
 {
     assert(stk);
+    stackErrorField error = {};
 
     stk->capacity = (capacity > 0) ? capacity : DEFAULT_CAPACITY;
     stk->size = 0;
@@ -39,7 +51,11 @@ stackErrorEnum stackCtor(stack *stk, size_t capacity)
 
     stk->data = (elem_t *)myCalloc(stk->capacity, sizeof(elem_t));
     //printf("data[%p], capacity = %lld\n", stk->data, stk->capacity);
-    if (!stk->data) return DATA_NULL;
+    if (!stk->data) 
+    {
+        error.data_null = 1;
+        return error;
+    }
 
     *(unsigned int *) stk->data                  = BUF_CANARY;
     stk->data = (elem_t *)((int *)stk->data + 1);
@@ -49,12 +65,13 @@ stackErrorEnum stackCtor(stack *stk, size_t capacity)
     printf("stackHashCalc = %u\n", stackHashCalc(stk));
     printf("stkHash = %u\n", stk->hash);
 
-    return STACK_OK;
+    return error;
 }
 
-stackErrorEnum stackDtor(stack *stk)
+stackErrorField stackDtor(stack *stk)
 {
     assert(stk);
+    stackErrorField error = {};
     
     stk->data = (elem_t *)((int *)stk->data - 1);
     if (stk->data) free(stk->data);
@@ -68,10 +85,10 @@ stackErrorEnum stackDtor(stack *stk)
 
     stk->hash = 0;
 
-    return STACK_OK;
+    return error;
 }
 
-stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *function)
+stackErrorField stackDump(stack *stk, const char *file, int line, const char *function)
 {
     assert(stk);
     printf("I'm stackDump called from %s (%d) %s\n", function, line, file);
@@ -85,7 +102,7 @@ stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *fun
     if (!stk->data)
     {
         printf("NULL\n");
-        return DATA_NULL;
+        return stackError(stk);
     }
     putchar('\n');
 
@@ -108,44 +125,49 @@ stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *fun
     return stackError(stk);
 }
 
-stackErrorEnum stackPush(stack *stk, elem_t value)
+stackErrorField stackPush(stack *stk, elem_t value)
 {
-    STACK_DUMP(stk);
     STACK_VERIFY;
+    stackErrorField error = {};
 
-    STACK_DUMP(stk);
     if (stk->size >= stk->capacity) stackRealloc(stk);
-    STACK_DUMP(stk);
 
     stk->data[stk->size++] = value;
 
     stk->hash = stackHashCalc(stk);
-    STACK_VERIFY;
-    return STACK_OK;
+    return error;
 }
 
-stackErrorEnum stackPop(stack *stk, elem_t *returnValue)
+stackErrorField stackPop(stack *stk, elem_t *returnValue)
 {
     STACK_VERIFY;
     assert(returnValue);
 
-    if (!stk->size) return ANTI_OVERFLOW;
+    stackErrorField error = {};
+
+    if (!stk->size) 
+    {
+        error.anti_overflow = 1;
+        return error;
+    }
     if (stk->size * REALLOC_RATE  * REALLOC_RATE <= stk->capacity) stackRealloc(stk);
 
     *returnValue = stk->data[--stk->size];
     //stk->data[stk->size] = 0;
 
     stk->hash = stackHashCalc(stk);
-    return STACK_OK;
+    return error;
 }
 
-stackErrorEnum stackRealloc(stack *stk)
+stackErrorField stackRealloc(stack *stk)
 {
     STACK_VERIFY;
 
     printf("i'm stackRealloc\n");
     printf("capacity = %lld\nsize = %lld\n", stk->capacity, stk->size);
     printf("start reallocing\n");
+
+    stackErrorField error = {};
 
     stk->data = (elem_t *)((int *)stk->data - 1);
     size_t prevCapacity = stk->capacity;
@@ -154,21 +176,25 @@ stackErrorEnum stackRealloc(stack *stk)
     {
         stk->capacity *= REALLOC_RATE;
         stk->data = (elem_t *)realloc(stk->data, stk->capacity * sizeof(elem_t) + 2 * sizeof(int));
-        if (!stk->data) return REALLOC_FAILED;
     }
     else if (stk->size * REALLOC_RATE  * REALLOC_RATE <= stk->capacity)
     {
         stk->capacity /= REALLOC_RATE;
         stk->data = (elem_t *)realloc(stk->data, stk->capacity * sizeof(elem_t) + 2 * sizeof(int));
-        if (!stk->data) return REALLOC_FAILED;
     }
+    if (!stk->data) 
+    {
+        error.realloc_failed = 1;
+        return error;
+    }
+
     stk->data = (int *)stk->data + 1;
     *(unsigned int *)(stk->data + prevCapacity)  = 0;
     *(unsigned int *)(stk->data + stk->capacity) = BUF_CANARY;
 
     printf("realloc finished\n");
     printf("new capacity = %lld\nnew size = %lld\n", stk->capacity, stk->size);
-    return STACK_OK;
+    return error;
 }
 
 void *myCalloc(size_t elementNum, size_t elementSize)
@@ -189,6 +215,8 @@ void *myCalloc(size_t elementNum, size_t elementSize)
 
 unsigned int stackHashCalc(stack *stk)
 {
+    assert(stk);
+
     unsigned int tempHash = stk->hash;
     stk->hash = 0;
 
@@ -210,10 +238,13 @@ unsigned int stackHashCalc(stack *stk)
     return hash;
 }
 
-stackErrorEnum stackHashCheck(stack *stk)
+stackErrorField stackHashCheck(stack *stk)
 {
-    unsigned int hashValue = stackHashCalc(stk);
-    if (hashValue != stk->hash) return CHANGED_HASH;
+    assert(stk);
+    stackErrorField error = {};
 
-    return STACK_OK;
+    unsigned int hashValue = stackHashCalc(stk);
+    if (hashValue != stk->hash) error.changed_hash = 1;
+
+    return error;
 }

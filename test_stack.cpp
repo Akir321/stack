@@ -14,7 +14,6 @@ int main()
     STACK_DUMP(&stk);
     stackCtor(&stk, 2);
     printf("hash calc  = %u\n", stackHashCalc(&stk));
-    printf("hash check = %d\n", stackHashCheck(&stk));
     stackError(&stk);
     for (size_t i = 0; i < sizeof(stack); i++)
     {
@@ -54,6 +53,6 @@ int main()
     stackPush(&stk, 78);
 
     stackDtor(&stk);
-    printf("error (after destructing) = %d\n", stackError(&stk));
+    printf("error (after destructing) = %d\n", errorFieldToU(stackError(&stk)));
     stackPush(&stk, 2);
 }

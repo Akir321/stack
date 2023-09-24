@@ -27,38 +27,39 @@ struct stack
     unsigned int stackCanary2;
 };
 
-enum stackErrorEnum
+struct stackErrorField
 {
-    STACK_OK       = 0,
-    STACK_NULL     = 1,
-    DATA_NULL      = 2,
-    SMALL_CAPACITY = 3,
-    ANTI_OVERFLOW  = 4,
-    REALLOC_FAILED = 5,
-    CHANGED_CANARY = 6,
-    CHANGED_HASH   = 7
+    unsigned stack_null     : 1;
+    unsigned data_null      : 1;
+    unsigned small_capacity : 1;
+    unsigned anti_overflow  : 1;
+    unsigned realloc_failed : 1;
+    unsigned changed_canary : 1;
+    unsigned changed_hash   : 1;
 };
 
-stackErrorEnum stackError(stack *stk);
+stackErrorField stackError(stack *stk);
 
-stackErrorEnum stackCtor(stack *stk, size_t capacity);
+stackErrorField stackCtor(stack *stk, size_t capacity);
 
-stackErrorEnum stackDtor(stack *stk);
+stackErrorField stackDtor(stack *stk);
 
-stackErrorEnum stackDump(stack *stk, const char *file, int line, const char *function);
+stackErrorField stackDump(stack *stk, const char *file, int line, const char *function);
 
 #define STACK_DUMP(stk) stackDump((stk), __FILE__, __LINE__, __func__);
 
-stackErrorEnum stackPush(stack *stk, elem_t value);
+stackErrorField stackPush(stack *stk, elem_t value);
 
-stackErrorEnum stackPop(stack *stk, elem_t *returnValue);
+stackErrorField stackPop(stack *stk, elem_t *returnValue);
 
-stackErrorEnum stackRealloc(stack *stk);
+stackErrorField stackRealloc(stack *stk);
 
 void *myCalloc(size_t elementNum, size_t elementSize);
 
 unsigned int stackHashCalc(stack *stk);
 
-stackErrorEnum stackHashCheck(stack *stk);
+stackErrorField stackHashCheck(stack *stk);
+
+unsigned errorFieldToU(stackErrorField error);
 
 #endif //STACK_H
