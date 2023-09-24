@@ -4,6 +4,12 @@
 typedef int elem_t;
 #define elemFormat "%d"
 
+#undef  CANARY_PROTECTION
+#undef    HASH_PROTECTION
+
+#define CANARY_PROTECTION
+#define   HASH_PROTECTION
+
 const size_t DEFAULT_CAPACITY = 8;
 const size_t LAST_PRINTED     = 16;
 const size_t ELEM_PRINT_ADD   = 4;

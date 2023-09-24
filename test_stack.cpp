@@ -13,7 +13,7 @@ int main()
     putchar('\n');
     STACK_DUMP(&stk);
     stackCtor(&stk, 2);
-    printf("hash calc  = %u\n", stackHashCalc(&stk));
+    //printf("hash calc  = %u\n", stackHashCalc(&stk));
     stackError(&stk);
     for (size_t i = 0; i < sizeof(stack); i++)
     {
