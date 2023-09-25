@@ -7,8 +7,8 @@ typedef int elem_t;
 #undef  CANARY_PROTECTION
 #undef    HASH_PROTECTION
 
-#define CANARY_PROTECTION
-#define   HASH_PROTECTION
+#define CANARY_PROTECTION(...) __VA_ARGS__
+#define   HASH_PROTECTION(...) __VA_ARGS__
 
 const size_t DEFAULT_CAPACITY = 8;
 const size_t LAST_PRINTED     = 16;
@@ -18,19 +18,19 @@ const size_t REALLOC_RATE     = 2;
 const unsigned int HASH_BASE  = 256;
 const unsigned int HASH_MOD   = 11113;
 
-const unsigned int STK_CANARY = 0xDEADBEEF;
-const unsigned int BUF_CANARY = 0xFACEFEED;
+const unsigned long long STK_CANARY = 0xDEADBEEF;
+const unsigned long long BUF_CANARY = 0xFACEFEED;
 
 struct stack
 {
-    unsigned int stackCanary1;
+    CANARY_PROTECTION( long long stackCanary1; )
     elem_t *data;
 
     size_t capacity;
     size_t size;
 
-    unsigned int hash;
-    unsigned int stackCanary2;
+    HASH_PROTECTION  ( unsigned hash; )
+    CANARY_PROTECTION( long long stackCanary2; )
 };
 
 struct stackErrorField

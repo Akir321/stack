@@ -15,27 +15,27 @@ stackErrorField stackError(stack *stk)
 {
     stackErrorField error = {};
 
-    if (!stk)                                { error.stack_null     = 1;  return error; }
-    if (!stk->data)                            error.data_null      = 1;
-    if (stk->capacity < stk->size)             error.small_capacity = 1;
+    if (!stk)                                    { error.stack_null     = 1;  return error; }
+    if (!stk->data)                                error.data_null      = 1;
+    if (stk->capacity < stk->size)                 error.small_capacity = 1;
 
-    #ifdef CANARY_PROTECTION
-    if (stk->stackCanary1 != STK_CANARY)       error.changed_canary = 1;
-    if (stk->stackCanary2 != STK_CANARY)       error.changed_canary = 1;
-    #endif
+    CANARY_PROTECTION (
+        if (stk->stackCanary1 != STK_CANARY)       error.changed_canary = 1;
+        if (stk->stackCanary2 != STK_CANARY)       error.changed_canary = 1;
+        )
 
-    #ifdef HASH_PROTECTION
-    if (stackHashCheck(stk).changed_hash == 1) error.changed_hash   = 1;
-    #endif
+    HASH_PROTECTION (
+        if (stackHashCheck(stk).changed_hash) error.changed_hash   = 1;
+        )
 
-    if (error.data_null == 1)                  return error;
+    if (error.data_null == 1)                      return error;
 
-    #ifdef CANARY_PROTECTION
-    unsigned int buf_canary = *((unsigned int *)stk->data - 1);
-    if (buf_canary != BUF_CANARY)              error.changed_canary = 1;
-    buf_canary = *(unsigned int *)(stk->data + stk->capacity);
-    if (buf_canary != BUF_CANARY)              error.changed_canary = 1;
-    #endif
+    CANARY_PROTECTION (
+        unsigned long long buf_canary = *((unsigned long long *)stk->data - 1);
+        if (buf_canary != BUF_CANARY)              error.changed_canary = 1;
+        buf_canary = *(unsigned long long *)(stk->data + stk->capacity);
+        if (buf_canary != BUF_CANARY)              error.changed_canary = 1;
+        )
 
     return error;
 }
@@ -53,10 +53,10 @@ stackErrorField stackCtor(stack *stk, size_t capacity)
     stk->capacity = (capacity > 0) ? capacity : DEFAULT_CAPACITY;
     stk->size = 0;
 
-    #ifdef CANARY_PROTECTION
-    stk->stackCanary1 = STK_CANARY;
-    stk->stackCanary2 = STK_CANARY;
-    #endif
+    CANARY_PROTECTION (
+        stk->stackCanary1 = STK_CANARY;
+        stk->stackCanary2 = STK_CANARY;
+        )
 
     stk->data = (elem_t *)myCalloc(stk->capacity, sizeof(elem_t));
     //printf("data[%p], capacity = %lld\n", stk->data, stk->capacity);
@@ -66,17 +66,17 @@ stackErrorField stackCtor(stack *stk, size_t capacity)
         return error;
     }
 
-    #ifdef CANARY_PROTECTION
-    *(unsigned int *) stk->data                  = BUF_CANARY;
-    stk->data = (elem_t *)((int *)stk->data + 1);
-    *(unsigned int *)(stk->data + stk->capacity) = BUF_CANARY;
-    #endif
+    CANARY_PROTECTION (
+        *(unsigned long long *) stk->data                  = BUF_CANARY;
+        stk->data = (elem_t *)((unsigned long long *)stk->data + 1);
+        *(unsigned long long *)(stk->data + stk->capacity) = BUF_CANARY;
+        )
 
-    #ifdef HASH_PROTECTION
-    stk->hash = stackHashCalc(stk);
-    printf("stackHashCalc = %u\n", stackHashCalc(stk));
-    printf("stkHash = %u\n", stk->hash);
-    #endif
+    HASH_PROTECTION (
+        stk->hash = stackHashCalc(stk);
+        printf("stackHashCalc = %u\n", stackHashCalc(stk));
+        printf("stkHash = %u\n", stk->hash);
+        )
 
     return error;
 }
@@ -86,9 +86,9 @@ stackErrorField stackDtor(stack *stk)
     assert(stk);
     stackErrorField error = {};
     
-    #ifdef CANARY_PROTECTION
-    stk->data = (elem_t *)((int *)stk->data - 1);
-    #endif
+    CANARY_PROTECTION (
+        stk->data = (elem_t *)((unsigned long long *)stk->data - 1);
+        )
     
     if (stk->data) free(stk->data);
     stk->data = NULL;
@@ -113,14 +113,14 @@ stackErrorField stackDump(stack *stk, const char *file, int line, const char *fu
 
     printf(" capacity = %lld\n size = %lld\n", stk->capacity, stk->size);
 
-    #ifdef HASH_PROTECTION
-    printf(" hash = %u\n", stk->hash);
-    #endif
+    HASH_PROTECTION (
+        printf(" hash = %u\n", stk->hash);
+        )
 
-    #ifdef CANARY_PROTECTION
-    printf("stackCanary1  = 0x%x\n", stk->stackCanary1);
-    printf("stackCanary2  = 0x%x\n", stk->stackCanary2);
-    #endif
+    CANARY_PROTECTION (
+        printf("stackCanary1  = 0x%llx\n", stk->stackCanary1);
+        printf("stackCanary2  = 0x%llx\n", stk->stackCanary2);
+        )
 
     printf(" data[%p] = ", stk->data);
     if (!stk->data)
@@ -141,12 +141,12 @@ stackErrorField stackDump(stack *stk, const char *file, int line, const char *fu
         printf("[%lld] = " elemFormat "\n", i, stk->data[i]);
     }
 
-    #ifdef CANARY_PROTECTION
-    unsigned int buf_canary = *((unsigned int *)stk->data - 1);
-    printf("bufferCanary1 = 0x%x\n", buf_canary);
-    buf_canary = *(unsigned int *)(stk->data + stk->capacity);
-    printf("bufferCanary2 = 0x%x\n", buf_canary);
-    #endif
+    CANARY_PROTECTION (
+        unsigned long long buf_canary = *((unsigned long long *)stk->data - 1);
+        printf("bufferCanary1 = 0x%llx\n", buf_canary);
+        buf_canary = *(unsigned long long *)(stk->data + stk->capacity);
+        printf("bufferCanary2 = 0x%llx\n", buf_canary);
+        )
 
     return error;
 }
@@ -159,13 +159,13 @@ void printStackErrors(stackErrorField error)
     if (error.anti_overflow)    printf("anti_overflow  = 1\n");
     if (error.realloc_failed)   printf("realloc_failed = 1\n");
 
-    #ifdef CANARY_PROTECTION
-    if (error.changed_canary)   printf("changed_canary = 1\n");
-    #endif
+    CANARY_PROTECTION (
+        if (error.changed_canary)   printf("changed_canary = 1\n");
+        )
 
-    #ifdef HASH_PROTECTION
-    if (error.changed_hash)     printf("changed_hash   = 1\n");
-    #endif
+    HASH_PROTECTION (
+        if (error.changed_hash)     printf("changed_hash   = 1\n");
+        )
 }
 
 stackErrorField stackPush(stack *stk, elem_t value)
@@ -178,9 +178,9 @@ stackErrorField stackPush(stack *stk, elem_t value)
 
     stk->data[stk->size++] = value;
 
-    #ifdef HASH_PROTECTION
-    stk->hash = stackHashCalc(stk);
-    #endif
+    HASH_PROTECTION (
+        stk->hash = stackHashCalc(stk);
+        )
 
     return error;
 }
@@ -203,9 +203,9 @@ stackErrorField stackPop(stack *stk, elem_t *returnValue)
     *returnValue = stk->data[--stk->size];
     //stk->data[stk->size] = 0;
 
-    #ifdef HASH_PROTECTION
-    stk->hash = stackHashCalc(stk);
-    #endif
+    HASH_PROTECTION (
+        stk->hash = stackHashCalc(stk);
+        )
 
     return error;
 }
@@ -220,20 +220,20 @@ stackErrorField stackRealloc(stack *stk)
 
     stackErrorField error = {};
 
-    #ifdef CANARY_PROTECTION
-    stk->data = (elem_t *)((int *)stk->data - 1);
-    size_t prevCapacity = stk->capacity;
-    #endif
+    CANARY_PROTECTION (
+        stk->data = (elem_t *)((long long *)stk->data - 1);
+        size_t prevCapacity = stk->capacity;
+        )
 
     if (stk->size >= stk->capacity)
     {
         stk->capacity *= REALLOC_RATE;
-        stk->data = (elem_t *)realloc(stk->data, stk->capacity * sizeof(elem_t) + 2 * sizeof(int));
+        stk->data = (elem_t *)realloc(stk->data, stk->capacity * sizeof(elem_t) + 2 * sizeof(long long));
     }
     else if (stk->size * REALLOC_RATE  * REALLOC_RATE <= stk->capacity)
     {
         stk->capacity /= REALLOC_RATE;
-        stk->data = (elem_t *)realloc(stk->data, stk->capacity * sizeof(elem_t) + 2 * sizeof(int));
+        stk->data = (elem_t *)realloc(stk->data, stk->capacity * sizeof(elem_t) + 2 * sizeof(long long));
     }
     if (!stk->data) 
     {
@@ -241,11 +241,11 @@ stackErrorField stackRealloc(stack *stk)
         return error;
     }
 
-    #ifdef CANARY_PROTECTION
-    stk->data = (int *)stk->data + 1;
-    *(unsigned int *)(stk->data + prevCapacity)  = 0;
-    *(unsigned int *)(stk->data + stk->capacity) = BUF_CANARY;
-    #endif
+    CANARY_PROTECTION (
+        stk->data = (elem_t *)((long long *)stk->data + 1);
+        *(unsigned long long *)(stk->data + prevCapacity)  = 0;
+        *(unsigned long long *)(stk->data + stk->capacity) = BUF_CANARY;
+        )
 
     printf("realloc finished\n");
     printf("new capacity = %lld\nnew size = %lld\n", stk->capacity, stk->size);
@@ -254,7 +254,12 @@ stackErrorField stackRealloc(stack *stk)
 
 void *myCalloc(size_t elementNum, size_t elementSize)
 {
-    size_t bufSize = elementSize * elementNum + 2 * sizeof(int);
+    size_t bufSize = elementSize * elementNum;
+    
+    CANARY_PROTECTION(
+        bufSize += 2 * sizeof(long long);
+        )
+
     void *buffer = malloc(bufSize);
     if (!buffer) return NULL;
 
@@ -268,7 +273,7 @@ void *myCalloc(size_t elementNum, size_t elementSize)
     return buffer;
 }
 
-#ifdef HASH_PROTECTION
+HASH_PROTECTION (
 unsigned int stackHashCalc(stack *stk)
 {
     assert(stk);
@@ -304,4 +309,4 @@ stackErrorField stackHashCheck(stack *stk)
 
     return error;
 }
-#endif
+)
