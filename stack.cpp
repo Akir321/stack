@@ -96,10 +96,14 @@ stackErrorField stackDtor(stack *stk)
     stk->capacity = 0;
     stk->size = -1;
 
-    stk->stackCanary1 = 0;
-    stk->stackCanary2 = 0;
+    CANARY_PROTECTION (
+        stk->stackCanary1 = 0;
+        stk->stackCanary2 = 0;
+        )
 
-    stk->hash = 0;
+    HASH_PROTECTION (
+        stk->hash = 0;
+        )
 
     return error;
 }
@@ -265,6 +269,7 @@ void *myCalloc(size_t elementNum, size_t elementSize)
 
     char *first = (char *)buffer;
     char *last  = (char *)buffer + bufSize;
+    
     for ( ; first != last; first++)
     {
         *first = 0;

@@ -45,12 +45,14 @@ int main()
     stackPop(&stk, &a);
     STACK_DUMP(&stk);
 
-    for (char *ptr = (char *)&stk; *ptr !=  '\0'; ptr++)
+    /*for (char *ptr = (char *)&stk; *ptr !=  '\0'; ptr++)
     {
         printf("%c\n", *ptr);
         *ptr = 42;
+        printf("stk.data = %p\n", stk.data);
     }
-    stackPush(&stk, 78);
+    printf("stk.data = %p\n", stk.data);
+    stackPush(&stk, 78);*/
 
     stackDtor(&stk);
     printf("error (after destructing) = %d\n", errorFieldToU(stackError(&stk)));
