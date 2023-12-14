@@ -7,8 +7,8 @@ typedef int elem_t;
 #undef  CANARY_PROTECTION
 #undef    HASH_PROTECTION
 
-#define CANARY_PROTECTION(...) __VA_ARGS__
-#define   HASH_PROTECTION(...) __VA_ARGS__
+#define CANARY_PROTECTION(...) //__VA_ARGS__
+#define   HASH_PROTECTION(...) //__VA_ARGS__
 
 const size_t DEFAULT_CAPACITY = 8;
 const size_t LAST_PRINTED     = 16;

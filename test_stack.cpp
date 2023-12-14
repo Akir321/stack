@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <assert.h>
+
 #include "stack.h"
+#include "html_logfile.h"
+
 
 int main()
 {
     stack stk = {};
-    printf("sizeof(stack) = %lld\n", sizeof(stack));
+    LOG("sizeof(stack) = %lld\n", sizeof(stack));
     for (size_t i = 0; i < sizeof(stack); i++)
     {
         printf("%d", *((char *)&stk + i));
@@ -36,7 +39,7 @@ int main()
 
     elem_t a = 0;
     stackPop(&stk, &a);
-    printf("popped = %d\n", a);
+    LOG("popped = %d\n", a);
     STACK_DUMP(&stk);
     stackPop(&stk, &a);
     stackPop(&stk, &a);
@@ -44,6 +47,11 @@ int main()
     STACK_DUMP(&stk);
     stackPop(&stk, &a);
     STACK_DUMP(&stk);
+
+    stackPush(&stk, 1);
+    STACK_DUMP(&stk);
+
+    LOG("hi\n");
 
     /*for (char *ptr = (char *)&stk; *ptr !=  '\0'; ptr++)
     {
@@ -55,6 +63,7 @@ int main()
     stackPush(&stk, 78);*/
 
     stackDtor(&stk);
-    printf("error (after destructing) = %d\n", errorFieldToU(stackError(&stk)));
+    LOG("hi after destruction\n");
+    LOG("error (after destructing) = %d\n", errorFieldToU(stackError(&stk)));
     stackPush(&stk, 2);
 }
